@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luyện Skimming & Scanning IELTS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        #passage-box {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 4px;
+        }
+        .question-item {
+            margin-bottom: 20px;
+        }
+        .question-text {
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .answer-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        .correct-answer-box {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #28a745;
+            background-color: #e2f4e8;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+            margin-top: 5px;
+            display: none;
+            word-wrap: break-word; /* Đảm bảo câu trả lời dài không bị tràn */
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .action-buttons button {
+            width: 50%;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #submit-btn {
+            background-color: #28a745;
+            color: white;
+        }
+        #submit-btn:hover {
+            background-color: #218838;
+        }
+        #new-passage-btn {
+            background-color: #007bff;
+            color: white;
+        }
+        #new-passage-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Luyện Skimming & Scanning</h2>
+
+    <div id="loading-message" style="text-align: center;">Đang tải bài đọc...</div>
+
+    <div id="passage-box" style="display: none;"></div>
+
+    <div id="questions-container"></div>
+
+    <div class="action-buttons">
+        <button id="submit-btn">Nộp bài</button>
+        <button id="new-passage-btn">Bài mới</button>
+    </div>
+</div>
+
+<script>
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbytO-h86xTv6bi_Gi68_Fsb3LP9h46b-wyMZo71zD-oGWi8h1vpL1CXC4E78GjE7w0VNg/exec';
+
+    const passageBox = document.getElementById('passage-box');
+    const questionsContainer = document.getElementById('questions-container');
+    const loadingMessage = document.getElementById('loading-message');
+    const newPassageBtn = document.getElementById('new-passage-btn');
+    const submitBtn = document.getElementById('submit-btn');
+
+    let allAnswers = []; // Biến toàn cục để lưu đáp án
+
+    async function fetchNewPassage() {
+        loadingMessage.style.display = 'block';
+        passageBox.style.display = 'none';
+        questionsContainer.innerHTML = '';
+        newPassageBtn.disabled = true;
+        submitBtn.disabled = true;
+
+        try {
+            const response = await fetch(webAppUrl);
+            const data = await response.json();
+
+            // Hiển thị bài đọc
+            passageBox.textContent = data.passage;
+            passageBox.style.display = 'block';
+
+            // Lưu trữ đáp án để sử dụng sau
+            allAnswers = data.answers;
+
+            // Tạo và hiển thị 6 câu hỏi ngẫu nhiên
+            data.questions.forEach((question, index) => {
+                const questionItem = document.createElement('div');
+                questionItem.className = 'question-item';
+                questionItem.innerHTML = `
+                    <div class="question-text">${index + 1}. Câu nào trong bài đọc có chứa đáp án của câu hỏi sau: ${question}</div>
+                    <textarea class="answer-box" rows="2" placeholder="Dán câu trả lời của bạn vào đây"></textarea>
+                    <div class="correct-answer-box"></div>
+                `;
+                questionsContainer.appendChild(questionItem);
+            });
+
+        } catch (error) {
+            loadingMessage.textContent = 'Có lỗi xảy ra khi tải bài đọc. Vui lòng thử lại.';
+            console.error('Lỗi khi tải dữ liệu:', error);
+        } finally {
+            loadingMessage.style.display = 'none';
+            newPassageBtn.disabled = false;
+            submitBtn.disabled = false;
+        }
+    }
+
+    function showAnswers() {
+        const answerBoxes = document.querySelectorAll('.correct-answer-box');
+        answerBoxes.forEach((box, index) => {
+            box.textContent = `Đáp án: ${allAnswers[index]}`;
+            box.style.display = 'block';
+        });
+        submitBtn.disabled = true; // Ngăn không cho nộp bài lần nữa
+    }
+
+    newPassageBtn.addEventListener('click', fetchNewPassage);
+    submitBtn.addEventListener('click', showAnswers);
+
+    // Tải bài đọc mới khi trang web được mở lần đầu
+    fetchNewPassage();
+</script>
+
+</body>
+</html>
